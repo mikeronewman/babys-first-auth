@@ -2,10 +2,13 @@
   <!-- eslint-disable -->
   <section>
     <h1>Signup</h1>
+    <div v-if="signingUp">
+      <img class="loading-image" src="../assets/infinity_loading.svg" alt="loading animation" />
+    </div>
     <div v-if="errorMessage" class="alert alert-danger" role="alert">
       {{ errorMessage }}
     </div>
-    <form @submit.prevent="signup">
+    <form v-if="!signingUp" @submit.prevent="signup">
       <div class="mb-3">
         <label for="username" class="form-label">Username</label>
         <input
@@ -61,6 +64,7 @@ const schema = Joi.object().keys({
 
 export default {
   data: () => ({
+    signingUp: false,
     errorMessage: '',
     user: {
       username: '',
@@ -84,7 +88,7 @@ export default {
           username: this.user.username,
           password: this.user.password,
         };
-
+        this.signingUp = true;
         fetch(SIGNUP_URL, {
           method: 'POST',
           body: JSON.stringify(body),
@@ -99,9 +103,15 @@ export default {
             throw new Error(error.message);
           });
         }).then(() => {
-          this.$router.push('/login');
+          setTimeout(() => {
+            this.signingUp = false;
+            this.$router.push('/login');
+          }, 1000);
         }).catch((error) => {
-          this.errorMessage = error.message;
+          setTimeout(() => {
+            this.signingUp = false;
+            this.errorMessage = error.message;
+          }, 1000);
         });
       }
     },
@@ -126,5 +136,7 @@ export default {
 </script>
 
 <style>
-
+  .loading-img {
+    color: #2b3e50;
+  }
 </style>
