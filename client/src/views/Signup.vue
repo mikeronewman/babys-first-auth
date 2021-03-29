@@ -8,7 +8,7 @@
     <div v-if="errorMessage" class="alert alert-danger" role="alert">
       {{ errorMessage }}
     </div>
-    <form v-if="!signingUp" @submit.prevent="signup">
+    <form v-if="!signingUp" @submit.prevent="signup()">
       <div class="mb-3">
         <label for="username" class="form-label">Username</label>
         <input
@@ -120,10 +120,12 @@ export default {
         this.errorMessage = 'Passwords must match';
         return false;
       }
+
       const result = schema.validate(this.user);
       if (result.error === null) {
         return true;
       } 
+      
       if (result.error.message.includes('username')) {
         this.errorMessage = 'Username is invalid';
       } else {
