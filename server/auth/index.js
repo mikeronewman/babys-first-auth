@@ -1,6 +1,7 @@
 const express = require('express');
 const Joi = require('joi');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const db = require('../db/connection');
 const users = db.get('users');
@@ -13,7 +14,7 @@ const schema = Joi.object().keys({
   password: Joi.string().trim().min(8).required()
 });
 
-// any route in here is prepended with /auth/
+// any route in here is prepended with /auth
 router.get('/', (req, res) => {
   res.json({
     message: "whattup ya'll"
@@ -53,6 +54,50 @@ router.post('/signup', (req, res, next) => {
   } else {
     res.status(422);
     next(result.error);
+  }
+});
+
+const respondError422 = (res, next) => {
+  res.status(422);
+  const error = new Error('Unable to login.');
+  next(error);
+}
+
+router.post('/login', (req, res, next) => {
+  const result = schema.validate(req.body);
+  if (result.error === null) {
+    users.findOne({
+      username: req.body.username,
+    }).then((user) => {
+      if (user) {
+        // compare hashed passwords
+        bcrypt.compare(req.body.password, user.password)
+        .then((result) => {
+          if (result) {
+            //they sent the right password!
+            const payload = {
+              _id: user._id,
+              username: user.username,
+            };
+            jwt.sign(payload, process.env.TOKEN_SECRET, { 
+              expiresIn: '1d', 
+            }, (err, token) => {
+              if (err) {
+                respondError422(res, next);
+              } else {
+                res.json({ token });
+              }
+            });
+          } else {
+            respondError422(res, next);
+          }
+        });
+      } else {
+        respondError422(res, next);
+      }
+    });
+  } else {
+    respondError422(res, next);
   }
 });
 
