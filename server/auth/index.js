@@ -14,6 +14,23 @@ const schema = Joi.object().keys({
   password: Joi.string().trim().min(8).required()
 });
 
+function createTokenSendResponse(user, res, next) {
+  const payload = {
+    _id: user._id,
+    username: user.username,
+  };
+
+  jwt.sign(payload, process.env.TOKEN_SECRET, { 
+    expiresIn: '1d', 
+  }, (err, token) => {
+    if (err) {
+      respondError422(res, next);
+    } else {
+      res.json({ token });
+    }
+  });
+};
+
 // any route in here is prepended with /auth
 router.get('/', (req, res) => {
   res.json({
@@ -42,11 +59,10 @@ router.post('/signup', (req, res, next) => {
           const newUser = {
             username: req.body.username,
             password: hashedPassword
-          }
+          };
           // insert the user with the hashed password
           users.insert(newUser).then(insertedUser => {
-            delete insertedUser.password;
-            res.json(insertedUser);
+            createTokenSendResponse(insertedUser, res, next);
           });
         }).catch(err => console.log(err));
       }
@@ -75,30 +91,12 @@ router.post('/login', (req, res, next) => {
         .then((result) => {
           if (result) {
             //they sent the right password!
-            const payload = {
-              _id: user._id,
-              username: user.username,
-            };
-            jwt.sign(payload, process.env.TOKEN_SECRET, { 
-              expiresIn: '1d', 
-            }, (err, token) => {
-              if (err) {
-                respondError422(res, next);
-              } else {
-                res.json({ token });
-              }
-            });
-          } else {
-            respondError422(res, next);
-          }
+            createTokenSendResponse(user, res, next);
+          } else { respondError422(res, next); }
         });
-      } else {
-        respondError422(res, next);
-      }
+      } else { respondError422(res, next); }
     });
-  } else {
-    respondError422(res, next);
-  }
+  } else { respondError422(res, next); }
 });
 
 module.exports = router;
