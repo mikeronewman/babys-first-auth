@@ -20,8 +20,17 @@ function checkTokenSetUser(req, res, next) {
   }
 }
 
+function isLoggedIn(req, res, next) {
+  if (req.user) {
+    next();
+  } else {
+    const error = new Error('Un-Authorized');
+    res.status(401);
+    next(error);
+  }
+}
+
 module.exports = {
   checkTokenSetUser,
+  isLoggedIn,
 };
-
-// Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MDYyNGVmMGY5MjYyZDAxYWM5YjIwMTIiLCJ1c2VybmFtZSI6ImdyZWVuYnJpYXJ5ZW9tYW4iLCJpYXQiOjE2MTcwNTU0NzIsImV4cCI6MTYxNzE0MTg3Mn0.HtcxCqvoxfdI7G-PUK38pqHFYV8B3LFT8a6-ZIPwpyo

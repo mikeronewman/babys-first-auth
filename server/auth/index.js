@@ -39,15 +39,12 @@ router.get('/', (req, res) => {
 });
 
 router.post('/signup', (req, res, next) => {
-  // validate the request
   const result = Joi.validate(req.body, schema);
-  // if there are no validation errors
   if(result.error === null) {
     // make sure username is unique
     users.findOne({
       username: req.body.username
     }).then(user => {
-      // if this user is already found
       if(user) {
         const error = new Error('Sorry, that username is already taken.');
         res.status(409);
